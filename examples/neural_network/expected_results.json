@@ -1,0 +1,5 @@
+{
+    "VIT_MNIST":{"acc_train": 97.0, "acc_val": 95.0, "acc_tol": 2.0, "loss_train": 0.2, "loss_val": 0.2, "loss_tol":0.2}, 
+    "multiples_inputs":{"acc_train": 90.0, "acc_val": 80.0, "acc_tol": 5.0, "loss_train": 0.2, "loss_val": 0.2, "loss_tol":0.2}, 
+    "UNet_PET":{"acc_train": 0.0, "acc_val": 0.0, "acc_tol": 2.0, "loss_train": 0.8, "loss_val": 0.8, "loss_tol":0.3}
+}

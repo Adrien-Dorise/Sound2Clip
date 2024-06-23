@@ -1,0 +1,8 @@
+Model,Score,Parameters
+SGD_classification,0.694,"{'alpha': 0.001, 'learning_rate': 'optimal', 'loss': 'huber', 'penalty': 'elasticnet'}"
+SVM_classification,0.9,"{'C': 5, 'coef0': 0.01, 'gamma': 'scale', 'kernel': 'rbf'}"
+KNN_classification,0.8619999999999999,"{'n_neighbors': 1, 'p': 2}"
+decision_tree_classification,0.666,"{'criterion': 'gini', 'max_depth': None}"
+random_forest_classification,0.8639999999999999,"{'criterion': 'gini', 'max_depth': 100, 'n_estimators': 100}"
+ADA_boost_classification,0.45600000000000007,"{'estimator': None, 'learning_rate': 0.85, 'n_estimators': 100}"
+GBoost_classification,0.742,"{'learning_rate': 0.85, 'n_estimators': 100}"
