@@ -115,16 +115,28 @@ def plot_fourier(xf, yf):
 
 
 if __name__ == "__main__":
-    save_path = "data/dummy/"
-    freq = 1000
-    sample_rate = 44100
-    duration = 5
-    generate_sin(freq, sample_rate, duration, save_path)
-    
-    data, sample_rate = wav2sound(f"{save_path}/sinwave.wav")
-    windows = sound2window(data, 500)
-    fouriers = window2fourier(windows, sample_rate)
-    
-    if False:
+    save_path = "data/dummy/audio/"
+
+    # Fourier on Sinusoid
+    if True:
+        # Generate a sinusoid
+        freq = 1000
+        sample_rate = 44100
+        duration = 5
+        generate_sin(freq, sample_rate, duration, save_path)
+
+        # Fourier Transform        
+        data, sample_rate = wav2sound(f"{save_path}sinwave.wav")
+        windows = sound2window(data, 500)
+        fouriers = window2fourier(windows, sample_rate)
         plot_fourier(fouriers[0][0], fouriers[0][1])
-        plot_fourier(fouriers[250][0], fouriers[250][1])
+    
+    # Fourier on dummy audio
+    if True:
+        video_file = "data/dummy/audio/dummy_audio.wav"
+        data, sample_rate = wav2sound(video_file)
+        data = stereo2mono(data)
+        windows = sound2window(data, 500)
+        fouriers = window2fourier(windows, sample_rate)
+        plot_fourier(fouriers[0][0], fouriers[0][1])
+    

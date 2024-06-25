@@ -36,8 +36,10 @@ def video2sound(video_path, save_path):
 
     Args:
         video_path (string): Path of the video file
-        save_path (string): Path to the folder in which the audio is saved
+        save_path (string): Complete filename of the saved audio file
         """
+    if os.path.exists(save_path):
+        os.remove(save_path)
     extract_audio(input_path=video_path, output_path=save_path, output_format="wav")
 
 def video2framerate(video_path):
@@ -75,13 +77,16 @@ def video2framecount(video_path):
 
 if __name__ == "__main__":
     
-    video_path = "./data/raw/Attack on Titan Season 2 - Opening _ Shinzou wo Sasageyo!.mp4"
-    
+    video_path = "./data/dummy/raw_clip/dummy_clip.mp4"
     fps = video2framerate(video_path)
     print(f"video framerate: {fps}")
-    if False:
-        save_path = "./data/images/attack_on_titan_s2/"
-        video2image(video_path, save_path)
+    
+    # Extract frames from video
     if True:
-        save_path = "./data/audio/attack_on_titan_s2/audio.wav"
+        save_path = "./data/dummy/frames/dummy_clip/"
+        video2image(video_path, save_path)
+    
+    # Extract audio from video
+    if True:
+        save_path = "./data/dummy/audio/dummy_audio.wav"
         video2sound(video_path, save_path)
