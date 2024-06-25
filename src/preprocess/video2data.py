@@ -1,7 +1,6 @@
 import src.preprocess.sound as sound
 import src.dataset.extract_video as vid
 
-FRAMERATE = 24
 
 def sync_audio(wav_path, video_path):
     data, sample_rate = sound.wav2sound(wav_path)
@@ -10,7 +9,7 @@ def sync_audio(wav_path, video_path):
     window_length = int(len(data) / framecount)
     windows = sound.sound2window(data, window_length)
     fouriers = sound.window2fourier(windows, sample_rate)
-    return fouriers
+    return fouriers[0:framecount]
     
     
 

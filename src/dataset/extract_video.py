@@ -31,6 +31,15 @@ def video2image(video_path, save_path):
     cam.release() 
     cv2.destroyAllWindows()    
 
+def video2sound(video_path, save_path):
+    """Extract the audio of video file and save it in a folder
+
+    Args:
+        video_path (string): Path of the video file
+        save_path (string): Path to the folder in which the audio is saved
+        """
+    extract_audio(input_path=video_path, output_path=save_path, output_format="wav")
+
 def video2framerate(video_path):
     """Return the framerate of a video file.
 
@@ -47,20 +56,20 @@ def video2framerate(video_path):
     return fps
 
 def video2framecount(video_path):
+    """Return the number of frames of a video file.
+
+    Args:
+        video_path (string): Path of the video file
+    
+    Returns:
+        fps (int): Number of frames of the video file
+    """   
     cam = cv2.VideoCapture(video_path)
     framecount = cam.get(cv2.CAP_PROP_FRAME_COUNT)
     cam.release() 
     cv2.destroyAllWindows() 
-    return framecount
+    return int(framecount)
 
-def video2sound(video_path, save_path):
-    """Extract the audio of video file and save it in a folder
-
-    Args:
-        video_path (string): Path of the video file
-        save_path (string): Path to the folder in which the audio is saved
-        """
-    extract_audio(input_path=video_path, output_path=save_path, output_format="wav")
 
 
 
@@ -70,9 +79,9 @@ if __name__ == "__main__":
     
     fps = video2framerate(video_path)
     print(f"video framerate: {fps}")
-    if True:
+    if False:
         save_path = "./data/images/attack_on_titan_s2/"
         video2image(video_path, save_path)
-    if False:
+    if True:
         save_path = "./data/audio/attack_on_titan_s2/audio.wav"
         video2sound(video_path, save_path)

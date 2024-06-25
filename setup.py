@@ -31,7 +31,8 @@ setup(name="dragonflai",
             "opencv-python >= 4.7.0.72",
             "graphviz >= 0.20.1",
             "imgaug >= 0.4.0",
-            "tqdm >= 4.66.1"
+            "tqdm >= 4.66.1",
+            "audio-extract >= 0.6.0",
       ], 
       python_requires=">=3.10.1",
      )
