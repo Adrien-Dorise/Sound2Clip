@@ -1,3 +1,11 @@
+"""
+ sound.py references all methods relative to audio preprocessing.
+ It includes wav extraction, fourier transform and sliding windows transformation.
+ Author: Adrien Dorise (adrien.dorise@hotmail.com) - Law Tech Productions
+ Created: June 2024
+ Last updated: Adrien Dorise - June 2024
+"""
+
 import numpy as np
 import scipy.io.wavfile as wav
 from scipy.fft import fft, fftfreq

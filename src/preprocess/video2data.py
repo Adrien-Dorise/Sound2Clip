@@ -1,3 +1,11 @@
+"""
+ video2data.py references all methods used to extract relevant data from a video clip.
+ It includes synchronisation of the fourier transform for each frame of a clip.
+ Author: Adrien Dorise (adrien.dorise@hotmail.com) - Law Tech Productions
+ Created: June 2024
+ Last updated: Adrien Dorise - June 2024
+"""
+
 import src.preprocess.sound as sound
 import src.dataset.extract_video as vid
 

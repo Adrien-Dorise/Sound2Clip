@@ -1,10 +1,9 @@
 """
- data loader creation for a neural network classification model
- Author: Adrien Dorise (adrien.dorise@hotmail.com), Edouard Villain - LR Technologies
+ data loader creation for a neural network generative model
+ Author: Adrien Dorise (adrien.dorise@hotmail.com) - Law Tech Productions
  Created: June 2024
  Last updated: Adrien Dorise - June 2024
 """
-
 
 import os
 from PIL import Image
