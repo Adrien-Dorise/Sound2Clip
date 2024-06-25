@@ -5,47 +5,87 @@
  Last updated: Adrien Dorise - June 2024
 """
 
-import os
-from PIL import Image
-import torch
+import src.preprocess.video2data as video2data
+
+import random
+import cv2
+import numpy as np
+from torchvision import transforms
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 
 
+def image_data_augmentation(image):
+    # Randomly flip the image horizontally
+    if random.random() < 0.5:
+        image = F.hflip(image)
+   
+    # Randomly adjust brightness, contrast, saturation, and hue
+    factor = random.uniform(0.7, 1.3)
+    image = F.adjust_brightness(image, brightness_factor=factor)
+    image = F.adjust_contrast(image, contrast_factor=factor)
+    image = F.adjust_saturation(image, saturation_factor=factor)
 
-class Dataset(Dataset):
-    '''
-    Class used to store the dataset handled by pytorch. 
-    '''
-    def __init__(self, feat, target):
-        if not torch.is_tensor(feat):
-            self.feat = torch.from_numpy(feat)
-        else:
-            self.feat = feat
-        
-        if not torch.is_tensor(target):
-            self.target = torch.from_numpy(target)
-        else:
-            self.target = target
+    factor = random.uniform(0.1, -0.1) 
+    image = F.adjust_hue(image, hue_factor=factor)
+    
+    # Randomly rotate the image up to 20 degrees
+    angle = random.uniform(-20, 20)
+    image = F.rotate(image, angle)
+    
+    # Randomly translate the image
+    translate_x = random.uniform(-0.1, 0.1)
+    translate_y = random.uniform(-0.1, 0.1)
+    image = F.affine(image, angle=0, translate=(translate_x, translate_y), scale=1, shear=0)
+    
+    # Normalize the image
+    #image = F.normalize(image, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    return image
 
-        self.n_classes = len(torch.unique(self.target))
+class S2C_Dataset(Dataset):
+    '''
+    Class used to store the dataset handled by pytorch.
+    It takes tabular data as input, and images as target.
+    '''
+    def __init__(self, audio_file, frame_folder, shape=(256,256)):
+        '''
+        S2C_Dataset class constructor.
+        Parameters
+        ----------
+        audio_folder:
+            folder containing the WAV file for a single video clip. The audio can be extracted by using extract_video.py
+        frame_folder: 
+            folder containing all frames from a single video clip. The frame can be extracted by using extract_video.py
+        Returns
+        ----------
+        None
+        '''
+        self.target_path = frame_folder
+        self.feature_path = audio_file
+
+        self.targets = video2data.frames2data(self.target_path)
+        framecount = len(self.targets)
+        self.features = video2data.sync_audio(self.feature_path, framecount)
+        if len(self.features) == 0 or (self.targets) == 0:
+            raise Exception("No img file found")
+        if(len(self.features) != len(self.targets)):
+            raise Exception("Not the same number of features and targets! Must be an error in your dataset")
         
+        self.to_tensor = transforms.Compose([
+            transforms.ToTensor(),  # convert from [0, 255] to [0.0, 0.1]
+            ])
+        self.shape = shape
+
     def __len__(self):
-        return len(self.feat)
+        return len(self.targets)
 
     def __getitem__(self, idx):
-        return self.feat[idx], self.target[idx]
+        target = self.targets[idx]
+        target = cv2.resize(target, dsize=(self.shape[0], self.shape[1]), interpolation=cv2.INTER_CUBIC)
+        target = self.to_tensor(target)
+        return self.features[idx], target 
     
-def create_dataset(frames_path, wav_path):
-    frames = []
-    frames_name = os.listdir(frames_path)
-    extension = f".{frames_name[0].split('.')[1]}"
-    frames_name = [name[0:-len(extension)] for name in frames_name]
-    frames_name = sorted(frames_name, key=int)
-    for file_name in frames_name:
-        frames.append(Image.open(f"{frames_path}/{file_name}{extension}"))
-    return frames
 
 def create_loaders(features, targets, batch_size=None, test_size=0.2, shuffle=True):
     """Create a PyTorch DataLoader object that can handles the data processing when performing training or prediction of a ML/NN model.
@@ -84,7 +124,19 @@ def create_loaders(features, targets, batch_size=None, test_size=0.2, shuffle=Tr
     return train_loader, test_loader
 
 if __name__ == "__main__":
-    frame_folder = "./data/images/attack_on_titan_s2/"
-    wav_folder = "./data/audio/attack_on_titan_s2"
-    frames = create_dataset(frame_folder, wav_folder)
-    print("hello world")
+    import src.preprocess.sound as sound
+    import matplotlib.pyplot as plt
+    
+    frame_folder = "./data/dummy/frames/dummy_clip/"
+    wav_folder = "./data/dummy/audio/dummy_audio.wav"
+    
+    # Display feature and target on a newly created S2C dataset
+    if True:
+        dataset = S2C_Dataset(wav_folder,frame_folder)
+        feat, targ = dataset[0]
+        
+        sound.plot_fourier(feat[0],feat[1])
+        targ = targ.numpy().transpose(1,2,0)
+        targ = cv2.cvtColor(targ, cv2.COLOR_BGR2RGB) 
+        plt.imshow(targ)
+        plt.show()
