@@ -67,7 +67,8 @@ def sound2fourier(data, sample_rate):
     """
     yf = fft(data)
     xf = fftfreq(len(data), 1 / sample_rate)
-    return xf, yf
+    half_len = int(len(xf)/2)
+    return xf[0:half_len], np.abs(yf[0:half_len])
 
 def sound2window(data, window_length):
     """Apply a sliding window to a sound signal.
@@ -112,8 +113,7 @@ def plot_fourier(xf, yf):
         xf (np.array of float): abscisse values of the fourier transform
         yf (np.array of float): ordinate values of the fourier transform
     """
-    half_len = int(len(xf)/2)
-    plt.plot(xf[0:half_len], np.abs(yf[0:half_len]))
+    plt.plot(xf, yf)
     plt.grid(True)
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Amplitude")

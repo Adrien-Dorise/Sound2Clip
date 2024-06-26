@@ -3,191 +3,94 @@ from dragonflai.utils.utils_model import *
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 
-class DoubleConvBlock(nn.Module):
-    """Class to performs a double convolution, a batch normalization and a ReLu activation"""
 
-    def __init__(self, in_channels, out_channels, mid_channels=None):
-        """Initialize the DoubleConvBlock class
+def init_weights(module):
+    if isinstance(module, nn.Conv2d):
+        nn.init.xavier_uniform_(module.weight)
+        module.bias.data.fill_(0.0)
+    elif isinstance(module, nn.Linear):
+        nn.init.xavier_uniform_(module.weight)
+        module.bias.data.fill_(0.0)
 
-        Args:
-            in_channels (int): Number of channels in the input image
-            out_channels (int): Number of channels after the convolution
-            mid_channels (int, optional): Number of channels produced by the intermediate conv. If None, set to 'out_channels'. Defaults to None.
-        """
+class Up(nn.Module):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
-        if not mid_channels:
-            mid_channels = out_channels
-        self.double_conv = nn.Sequential(
-            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(mid_channels),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1, bias=False),
+        self.layer = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=5, stride=1, padding=2, bias=True),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2, mode="bilinear")
         )
+        self.layer.apply(init_weights)
 
     def forward(self, x):
-        """Do the forward pass
-
-        Args:
-            x (torch.Tensor): Input tensor of shape (N, in_channels, H, W)
-
-        Returns:
-            torch.Tensor: Output Tensor of shape (N, out_channels, H, W)
-        """
-        return self.double_conv(x)
-
-
-class DownSample(nn.Module):
-    """A class that compute a downsampling and a double convolution"""
-
-    def __init__(self, in_channels, out_channels):
-        """Initialize the DownSample class
-
-        Args:
-            in_channels (int): Number of channels in the input image
-            out_channels (int): Number of channels in the output image
-        """
+        return self.layer(x)
+    
+class LinearDown(nn.Module):
+    def __init__(self, input_size, output_size, dropout=0.2):
         super().__init__()
-        self.maxpool_conv = nn.Sequential(
-            nn.MaxPool2d(2),
-            DoubleConvBlock(in_channels, out_channels)
+        self.layer = nn.Sequential(
+            nn.Linear(input_size, output_size),
+            nn.ReLU(),
+            nn.Dropout(p=dropout),
         )
+        self.layer.apply(init_weights)
 
     def forward(self, x):
-        """Do the forward pass
-
-        Args:
-            x (torch.Tensor): Input tensor of shape (N, in_channels, H, W)
-
-        Returns:
-            torch.Tensor: Output tensor of shape (N, out_channels, H, W)
-        """
-        return self.maxpool_conv(x)
-
-
-class UpSample(nn.Module):
-    """A class that compute an upscaling and a double convolution"""
-
-    def __init__(self, in_channels, out_channels, bilinear=True):
-        """Initialize UpSample class
-
-        Args:
-            in_channels (int): Number of channels in the input image
-            out_channels (int): Number of channels in the output image
-            bilinear (bool, optional): If True, apply bilinear upsampling, if False, use a transposed conv. Defaults to True.
-        """
+        return self.layer(x)
+    
+class ExtractFourier(nn.Module):
+    def __init__(self):
         super().__init__()
 
-        # if bilinear, use the normal convolutions to reduce the number of channels
-        if bilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-            self.conv = DoubleConvBlock(in_channels, out_channels, in_channels // 2)
-        else:
-            self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
-            self.conv = DoubleConvBlock(in_channels, out_channels)
-
-    def forward(self, x1, x2):
-        """Compute the forward pass
-
-        Args:
-            x1 (torch.Tensor): Input tensor to be upscaled
-            x2 (torch.Tensor): Tensor to be concatenated with the upscaled x1 tensor
-
-        Returns:
-            torch.Tensor: Output tensor
-        """
-        x1 = self.up(x1)
-        diffY = x2.size()[2] - x1.size()[2]
-        diffX = x2.size()[3] - x1.size()[3]
-
-        x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                        diffY // 2, diffY - diffY // 2])
-        x = torch.cat([x2, x1], dim=1)
-        return self.conv(x)
+    def forward(self,x):    
+        return x[1]
 
 
-class OutConv(nn.Module):
-    """Class to create output layer"""
-    def __init__(self, in_channels, out_channels):
-        """Initialize OutConv class
+
+class S2CModel(NeuralNetwork):
+    """Class for a Sound2Clip model creation"""
+
+    def __init__(self, input_size, nb_channels=3, save_path="./results/tmp/"):
+        """Initialise the S2C Model class
 
         Args:
-            in_channels (int): Number of channels in the input image
-            out_channels (int): Number of channels in the output of the network
-        """
-        super(OutConv, self).__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
-
-    def forward(self, x):
-        """Compute the forward pass
-
-        Args:
-            x (torch.Tensor): Input tensor of shape (N, in_channels, H, W)
-
-        Returns:
-            torch.Tensor: Output tensor (1D)
-        """
-        return self.conv(x)
-
-class UNetModel(nn.Module):
-    """Class for UNet model creation"""
-    def __init__(self, n_channels, n_classes, bilinear=False, ):
-        """Initialize the UNet Model
-
-        Args:
-            n_channels (int): Number of channels in the input image
-            n_classes (int): Number of classes
-            bilinear (bool, optional): If True, use bilinear upsampling, if False, use a transposed conv . Defaults to False.
-        """
-        super(UNetModel, self).__init__()
-        self.n_channels = n_channels
-        self.n_classes = n_classes
-        self.bilinear = bilinear
-
-        self.inc = (DoubleConvBlock(n_channels, 64))
-        self.down1 = (DownSample(64, 128))
-        self.down2 = (DownSample(128, 256))
-        self.down3 = (DownSample(256, 512))
-        factor = 2 if bilinear else 1
-        self.down4 = (DownSample(512, 1024 // factor))
-        self.up1 = (UpSample(1024, 512 // factor, bilinear))
-        self.up2 = (UpSample(512, 256 // factor, bilinear))
-        self.up3 = (UpSample(256, 128 // factor, bilinear))
-        self.up4 = (UpSample(128, 64, bilinear))
-        self.outc = (OutConv(64, n_classes))
-
-    def forward(self, x):
-        """Compute the forward pass
-
-        Args:
-            x (torch.Tensor): Input tensor
-
-        Returns:
-            torch.Tensor: Output tensor of shape (N, n_classes, H, W)
-        """
-        x1 = self.inc(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
-        x5 = self.down4(x4)
-        x = self.up1(x5, x4)
-        x = self.up2(x, x3)
-        x = self.up3(x, x2)
-        x = self.up4(x, x1)
-        logits = self.outc(x)
-        return logits
-
-class UNet_PET(NeuralNetwork):
-    """UNet Class used in exemple inheriting from the NeuralNetwork class"""
-    def __init__(self, n_channels, n_classes, save_path="./results/tmp/"):
-        """Initialize UNet_PET class
-
-        Args:
-            n_channels (int): Number of channels in the input image
-            n_classes (int): Number of classes
+            input_size (int): Input size for the model
+            output_size (int): number of classes to predict
+            save_path (string): Folder path to save the results and checkpoints of the model
         """
         super().__init__(modelType=modelType.NEURAL_NETWORK, taskType=taskType.REGRESSION, save_path=save_path)
+        
+        # Model construction
+        # To USER: Adjust your model here
 
-        self.architecture = UNetModel(n_channels, n_classes).to(self.device)
+        linear_neurons = [512,512,256,128]
+        conv_kernels = [32,32,32,32,32,32,32]
+
+        latent_dim = int(linear_neurons[-1] // conv_kernels[0])
+        latent_img_shape = int(math.sqrt(latent_dim))
+        self.output_shape = math.pow(latent_img_shape,len(conv_kernels))
+        
+        if(latent_dim % latent_img_shape != 0):
+            raise Warning("Error in S2C architectures: Please ensure that the neurons and kernels chosen fits together to recreate an image.")
+
+        self.architecture.add_module("extract_fourrier", ExtractFourier())
+        self.architecture.add_module('lin1', LinearDown(input_size, linear_neurons[0]))
+        self.architecture.add_module('lin2', LinearDown(linear_neurons[0], linear_neurons[1]))
+        self.architecture.add_module('lin3', LinearDown(linear_neurons[1], linear_neurons[2]))
+        self.architecture.add_module('lin4', LinearDown(linear_neurons[2], linear_neurons[3]))
+
+        self.architecture.add_module("unflatten", nn.Unflatten(1,(conv_kernels[0],latent_img_shape,latent_img_shape)))
+
+        self.architecture.add_module("up_conv1", Up(conv_kernels[0], conv_kernels[1]))
+        self.architecture.add_module("up_conv2", Up(conv_kernels[1], conv_kernels[2]))
+        self.architecture.add_module("up_conv3", Up(conv_kernels[2], conv_kernels[3]))
+        self.architecture.add_module("up_conv4", Up(conv_kernels[3], conv_kernels[4]))
+        self.architecture.add_module("up_conv5", Up(conv_kernels[4], conv_kernels[5]))
+        self.architecture.add_module("up_conv6", Up(conv_kernels[5], conv_kernels[6]))
+        self.architecture.add_module("out_conv", nn.Conv2d(conv_kernels[6], nb_channels, kernel_size=5, stride=1, padding=2, bias=False))
+        self.architecture.add_module("out_sig", nn.Sigmoid())
+
+        self.architecture.to(self.device)
