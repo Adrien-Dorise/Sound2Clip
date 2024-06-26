@@ -6,6 +6,7 @@
 """
 
 import src.preprocess.video2data as video2data
+import src.postprocess.visualisation as visu
 
 import random
 import cv2
@@ -87,48 +88,36 @@ class S2C_Dataset(Dataset):
         return self.features[idx], target 
     
 
-def create_loaders(features, targets, batch_size=None, test_size=0.2, shuffle=True):
+def create_loader(dataset, batch_size=None, shuffle=True):
     """Create a PyTorch DataLoader object that can handles the data processing when performing training or prediction of a ML/NN model.
-    It is possible to create a test set automatically with the test_size parameter.
     
     Args:
-        features (list or np.array): List of features
-        targets (list or np.array): List of targets
+        dataset (Dataset): Initisialised "Dataset" object.
         batch_size (None or int, optional): Size of the batch used during training. When at None, only one batch is created. 
                                             Note, that ML models can't handle multiple batches. Defaults to None.
-        test_size (float, optional): Proportion of samples used for the test set between ]0,1[. Defaults to 0.2.
         shuffle (bool, optional): Set to true to shuffle the data before creating the loader. Defaults to True.
 
     Returns:
-        DataLoader, DataLoader: Train and test DataLoader objects
+        loader: Initialised PyTorch DataLoader object
     """
-    
-    #Divide between train set and test set
-    features_train, features_test, targets_train, targets_test = train_test_split(features, targets, test_size=test_size, shuffle=shuffle, random_state=948401971)
-    
-    # Create Dataset objects
-    train_dataset = Dataset(features_train,targets_train)
-    test_dataset = Dataset(features_test, targets_test)
-    
+        
     # Define batch size if not specified in the parameters
     if batch_size is None:
-        batch_size = len(train_dataset)
+        batch_size = len(dataset)
     
     # Create loader objects
-    train_loader = DataLoader(dataset=train_dataset,
-                            shuffle=False,
-                            batch_size=batch_size)
-    test_loader = DataLoader(dataset=test_dataset,
-                            shuffle=False,
-                            batch_size=int(batch_size*test_size))
-    return train_loader, test_loader
+    loader = DataLoader(dataset=dataset,
+                        shuffle=shuffle,
+                        batch_size=batch_size)
+    return loader
 
 if __name__ == "__main__":
     import src.preprocess.sound as sound
     import matplotlib.pyplot as plt
+    import numpy as np
     
-    frame_folder = "./data/dummy/frames/dummy_clip/"
     wav_folder = "./data/dummy/audio/dummy_audio.wav"
+    frame_folder = "./data/dummy/frames/dummy_clip/"
     
     # Display feature and target on a newly created S2C dataset
     if True:
@@ -136,7 +125,14 @@ if __name__ == "__main__":
         feat, targ = dataset[0]
         
         sound.plot_fourier(feat[0],feat[1])
-        targ = targ.numpy().transpose(1,2,0)
-        targ = cv2.cvtColor(targ, cv2.COLOR_BGR2RGB) 
-        plt.imshow(targ)
-        plt.show()
+        visu.plot_cv2(targ)
+
+    # Create DataLoader
+    if True:
+        dataset = S2C_Dataset(wav_folder,frame_folder)
+        loader = create_loader(dataset,1,False)
+        feat, targ = next(iter(loader))
+    
+        sound.plot_fourier(feat[0][0],feat[1][0])
+        visu.plot_cv2(targ[0])    
+    
