@@ -1,3 +1,10 @@
+"""
+ extract_video.py references all methods used extract audio and images features from a video file
+ Author: Adrien Dorise (adrien.dorise@hotmail.com) - Law Tech Productions
+ Created: June 2024
+ Last updated: Adrien Dorise - June 2024
+"""
+
 import numpy as np
 import cv2
 import os
