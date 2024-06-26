@@ -8,14 +8,10 @@ Last updated: Adrien Dorise - June 2024
 '''
 import dragonflai.utils.utils_model as utils_model
 from dragonflai.utils.utils_path import create_file_path
+import src.postprocess.visualisation as visu
 
-import os
-from os.path import exists
-import torch 
 import pickle
-import numpy as np 
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import matplotlib.pyplot as plt
+
 
 
 
@@ -26,11 +22,13 @@ class Experiment():
                 test_set,
                 validation_set,
                 visualisation_set,
-                model_type,
-                task_type,
                 criterion,
                 batch_size,
                 n_epochs,
+                lr,
+                scheduler,
+                kwargs,
+                optims,
                 save_path,
                 ):
         
@@ -45,16 +43,18 @@ class Experiment():
 
         #Model parameters  
         self.model = model
-        self.model_type = model_type
-        self.task_type = task_type
         self.criterion = criterion
         self.batch_size = batch_size
         self.n_epochs = n_epochs
+        self.lr = lr
+        self.optims = optims
+        self.scheduler = scheduler
+        self.kwargs = kwargs
          
     def fit(self):
         """Train the model using the data available in the train set.
         """
-        self.model._compile(self.train_set, self.test_set, self.criterion, lr=1e-4, opts=torch.optim.AdamW, scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau, batch_size=self.batch_size, epochs=self.n_epochs)
+        self.model._compile(self.train_set, self.test_set, self.criterion, lr=self.lr, opts=self.optims, scheduler=self.scheduler, batch_size=self.batch_size, epochs=self.n_epochs, kwargs=self.kwargs)
         history = self.model.fit(self.train_set, valid_set=self.validation_set, criterion=self.criterion, epochs=self.n_epochs)
 
         self.model.plot_learning_curve(history.loss_train,history.loss_val, f"{self.save_path}loss_history")
@@ -65,8 +65,6 @@ class Experiment():
 
         """
         loss, output, (_,target) = self.model.predict(self.test_set)
-        for i in range(len(output)):
-            print(f"sample {i}: target={target[i]} / prediction={output[i]}")
         
         return output
 
@@ -74,27 +72,12 @@ class Experiment():
     def visualise(self):
         """Visualisation of the first picture of the visualisation set.
         """
+        loss, output, (_,target) = self.model.predict(self.visualisation_set)
+        idx = 0
+        for img in output:
+            visu.plot_cv2(img,f"{self.save_path}generated_frames/{idx}.jpg")
+            idx += 1
         
-        if (self.task_type is utils_model.taskType.CLASSIFICATION):
-            loss, output, (_, target) = self.model.predict(self.visualisation_set)
-            if(target.shape[1] > 1):
-                target = np.argmax(target, axis=1)
-            if(output.shape[1] > 1):
-                output = np.argmax(output, axis=1)
-            print('\nCONFUSION MATRIX:')
-            cm = confusion_matrix(target, torch.tensor(output))
-            print(cm)
-            disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-            save_file = f"{self.save_path}/confusion_matrix_{self.model.model_name}.png" 
-
-             #Check if folder exists
-            file_name = save_file.split("/")[-1]
-            folder_path = save_file[0:-len(file_name)]
-            if not exists(folder_path):
-                os.makedirs(folder_path)
-            disp.plot().figure_.savefig(save_file)
-            print("Confusion matrix saved in {}".format(self.save_path))
-            plt.close()
 
     
     def save(self, path):
