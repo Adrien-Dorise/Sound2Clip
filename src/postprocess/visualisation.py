@@ -8,6 +8,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import dragonflai.utils.utils_path as utils
 import src.preprocess.video2data as video2data
 import src.dataset.extract_video as video
@@ -42,21 +43,25 @@ def frames2video(frame_folder, wav_file, save_path, fps, shape=128):
         fps (int): Framerate of the video
         shape (int, optional): Shape of the image. Only squared images are supported right now. Defaults to 128.
     """
+    utils.create_file_path(save_path)
+    tmp_path = f"{save_path[0:-4]}_tmp.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
-    video = cv2.VideoWriter(save_path,fourcc,fps,(shape,shape))
+    tmp_video = cv2.VideoWriter(tmp_path,fourcc,fps,(shape,shape))
     
     frames = video2data.frames2data(frame_folder)
     for f in frames:
          f = cv2.resize(f,(shape,shape))
-         video.write(f)
+         tmp_video.write(f)
 
     cv2.destroyAllWindows()
-    video.release()
-
-    video = mp.VideoFileClip(save_path)
+    tmp_video.release()
+    
+    video = mp.VideoFileClip(tmp_path)
     audio = mp.AudioFileClip(wav_file)
     video = video.set_audio(audio)
     video.write_videofile(save_path)
+    video.close()
+    os.remove(tmp_path)
 
 if __name__ == "__main__":
     
