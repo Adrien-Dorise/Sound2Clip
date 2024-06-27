@@ -67,3 +67,5 @@ if __name__ == "__main__":
     if True:
         frame_folder = "./data/dummy/frames/dummy_clip/"
         frames = frames2data(frame_folder)
+        cv2.imshow("dummy plot", frames[0])
+        cv2.waitKey(0)
