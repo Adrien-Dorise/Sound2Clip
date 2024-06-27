@@ -13,6 +13,7 @@ if __name__ == "__main__":
 	import src.preprocess.data_loader as loader
 	import src.config.data_config as data_config
 	import src.config.NN_config as NN_config
+	import src.dataset.extract_video as video
 
 	dataset = loader.S2C_Dataset(data_config.audio_file, data_config.frame_folder, (NN_config.output_shape,NN_config.output_shape))
 	dataloader = loader.create_loader(dataset,NN_config.batch_size,True)
@@ -35,7 +36,7 @@ if __name__ == "__main__":
 	experiment.model.print_architecture((1,743))
 	experiment.fit()
 	experiment.predict()
-	experiment.visualise()
+	experiment.visualise(data_config.audio_file, video.video2framerate(data_config.video_path))
 	#experiment.save(f"{data_config.save_path}experiment")
 	#experiment = Experiment.load(f"{data_config.save_path}experiment")
 	#experiment.visualise()

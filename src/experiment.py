@@ -9,11 +9,9 @@ Last updated: Adrien Dorise - June 2024
 import dragonflai.utils.utils_model as utils_model
 from dragonflai.utils.utils_path import create_file_path
 import src.postprocess.visualisation as visu
+import src.config.NN_config as NN_config
 
 import pickle
-
-
-
 
 
 class Experiment():
@@ -69,14 +67,17 @@ class Experiment():
         return output
 
 
-    def visualise(self):
-        """Visualisation of the first picture of the visualisation set.
+    def visualise(self, wav_path, fps):
+        """Save all generated frames + Recreate the video with generated frames and original audio.
         """
         loss, output, (_,target) = self.model.predict(self.visualisation_set)
+        frames_path = f"{self.save_path}generated_frames/"
         idx = 0
         for img in output:
-            visu.plot_cv2(img,f"{self.save_path}generated_frames/{idx}.jpg")
+            visu.plot_cv2(img,f"{frames_path}{idx}.jpg")
             idx += 1
+        
+        visu.frames2video(frames_path, wav_path, f"{self.save_path}dummy_generated_video.mp4", fps, NN_config.output_shape)
         
 
     
