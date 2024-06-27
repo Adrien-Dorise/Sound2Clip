@@ -9,6 +9,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import dragonflai.utils.utils_path as utils
+import src.utils.utils_s2c as utils_s2c
 
 def plot_cv2(cv2_image, save_path):
         if type(cv2_image) is not np.ndarray: 
@@ -20,6 +21,11 @@ def plot_cv2(cv2_image, save_path):
         utils.create_file_path(save_path)
         plt.savefig(save_path)
 
+
+def frames2video(frame_folder, wav_file, save_path, fps, shape=128):
+    video = cv2.VideoWriter(save_path,-1,fps,(shape,shape))
+    frames = utils_s2c
+     
 
 if __name__ == "__main__":
     image_path = "./data/dummy/frames/dummy_clip/0.jpg"
