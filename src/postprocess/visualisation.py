@@ -27,9 +27,12 @@ def plot_cv2(cv2_image, save_path):
     if(cv2_image.shape[0] <= 4):
         cv2_image = cv2_image.transpose(1,2,0)
     cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB) 
-    plt.imshow(cv2_image)
+    
+    fig = plt.imshow(cv2_image)
+    fig.axes.get_xaxis().set_visible(False)
+    fig.axes.get_yaxis().set_visible(False)
     utils.create_file_path(save_path)
-    plt.savefig(save_path)
+    plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 
 def frames2video(frame_folder, wav_file, save_path, fps, shape=128):

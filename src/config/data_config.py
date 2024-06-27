@@ -12,5 +12,6 @@ test_path = r"data/split1/test/"
 visu_path = r"data/split1/visu/"
 save_path = r"results/tmp/dummy_experiment/"
 
+video_path = r"./data/dummy/raw_clip/dummy_clip.mp4"
 frame_folder = r"./data/dummy/frames/dummy_clip/"
 audio_file = r"./data/dummy/audio/dummy_audio.wav"
