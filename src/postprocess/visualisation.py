@@ -73,7 +73,11 @@ if __name__ == "__main__":
         image_path = "./data/dummy/frames/dummy_clip/0.jpg"
         save_path = "./data/dummy/results/dummy_result.jpg"
         image = cv2.imread(image_path)
+<<<<<<< HEAD
         save_cv2(image, save_path)
+=======
+        plot_cv2(image, save_path)
+>>>>>>> main
 
     # Create a video from frames and audio
     if True:
