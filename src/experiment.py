@@ -74,7 +74,7 @@ class Experiment():
         frames_path = f"{self.save_path}generated_frames/"
         idx = 0
         for img in output:
-            visu.plot_cv2(img,f"{frames_path}{idx}.jpg")
+            visu.save_cv2(img,f"{frames_path}{idx}.jpg")
             idx += 1
         
         visu.frames2video(frames_path, wav_path, f"{self.save_path}dummy_generated_video.mp4", fps, NN_config.output_shape)

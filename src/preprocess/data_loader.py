@@ -90,6 +90,7 @@ class S2C_Dataset(Dataset):
 
 def create_loader(dataset, batch_size=None, shuffle=True):
     """Create a PyTorch DataLoader object that can handles the data processing when performing training or prediction of a ML/NN model.
+    It also takes the first 10 iteration for a validations et
     
     Args:
         dataset (Dataset): Initisialised "Dataset" object.
@@ -99,6 +100,7 @@ def create_loader(dataset, batch_size=None, shuffle=True):
 
     Returns:
         loader: Initialised PyTorch DataLoader object
+        valid_loader: Initialised PyTorch DataLoader with only the first value of the first loader
     """
         
     # Define batch size if not specified in the parameters
@@ -109,6 +111,7 @@ def create_loader(dataset, batch_size=None, shuffle=True):
     loader = DataLoader(dataset=dataset,
                         shuffle=shuffle,
                         batch_size=batch_size)
+
     return loader
 
 if __name__ == "__main__":
