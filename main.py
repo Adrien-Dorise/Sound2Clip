@@ -17,6 +17,7 @@ if __name__ == "__main__":
 
 	dataset = loader.S2C_Dataset(data_config.train_audio, data_config.train_frame, (NN_config.output_shape,NN_config.output_shape))
 	train = loader.create_loader(dataset,NN_config.batch_size,True)
+	visualisation = loader.create_loader(dataset,NN_config.batch_size,False)
 
 
 
@@ -24,7 +25,7 @@ if __name__ == "__main__":
 							train_set = train,
 							validation_set = train,
 							test_set = train,
-							visualisation_set = train,
+							visualisation_set = visualisation,
 							criterion = NN_config.crit,
 							lr = NN_config.lr,
 							optims = NN_config.optimizer,
@@ -39,6 +40,9 @@ if __name__ == "__main__":
 	experiment.fit()
 	experiment.predict()
 	experiment.visualise(data_config.train_audio, video.video2framerate(data_config.train_video))
-	#experiment.save(f"{data_config.save_path}experiment")
-	#experiment = Experiment.load(f"{data_config.save_path}experiment")
-	#experiment.visualise()
+	experiment.save(f"{data_config.save_path}experiment")
+
+	#experiment = Experiment.load(f"./results/tmp/dummy_experiment/experiment")
+	#experiment.model.load_model(f"./results/tmp/dummy_experiment/epoch1000_1")
+	#experiment.visualisation_set = visualisation
+	#experiment.visualise(data_config.train_audio, video.video2framerate(data_config.train_video))

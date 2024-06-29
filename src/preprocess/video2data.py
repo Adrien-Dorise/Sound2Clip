@@ -58,7 +58,7 @@ if __name__ == "__main__":
     video_path = "./data/dummy/raw_clip/dummy_clip.mp4"
     
     # Plot Fourier transform of the 10th frame's audio
-    if True:
+    if False:
         framecount = video.video2framecount(video_path)
         fouriers = sync_audio(audio_file, framecount)
         sound.plot_fourier(fouriers[10][0], fouriers[10][1])
@@ -66,6 +66,9 @@ if __name__ == "__main__":
     # Extract frames as python data
     if True:
         frame_folder = "./data/dummy/frames/dummy_clip/"
+        frame_folder = "results/tmp/AoT/generated_frames/"
         frames = frames2data(frame_folder)
-        cv2.imshow("dummy plot", frames[0])
+        cv2.imshow("dummy plot", frames[10])
+        cv2.waitKey(0)
+        cv2.imshow("dummy plot", frames[11])
         cv2.waitKey(0)

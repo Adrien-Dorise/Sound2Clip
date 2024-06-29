@@ -19,7 +19,7 @@ output_shape = 128
 NN_model = s2c.S2CModel(input_size,output_shape, output_channels,save_path=data_config.save_path)
 
 batch_size = 32
-num_epoch = 1000
+num_epoch = 200
 lr = 1e-4
 wd = 1e-4
 optimizer = torch.optim.AdamW
