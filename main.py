@@ -15,14 +15,17 @@ if __name__ == "__main__":
 	import src.config.NN_config as NN_config
 	import src.dataset.extract_video as video
 
-	dataset = loader.S2C_Dataset(data_config.audio_file, data_config.frame_folder, (NN_config.output_shape,NN_config.output_shape))
-	dataloader = loader.create_loader(dataset,NN_config.batch_size,True)
+	dataset = loader.S2C_Dataset(data_config.train_audio, data_config.train_frame, (NN_config.output_shape,NN_config.output_shape))
+	train = loader.create_loader(dataset,NN_config.batch_size,True)
+	visualisation = loader.create_loader(dataset,NN_config.batch_size,False)
+
+
 
 	experiment = Experiment(model = NN_config.NN_model,
-							train_set = dataloader,
-							validation_set = dataloader,
-							test_set = dataloader,
-							visualisation_set = dataloader,
+							train_set = train,
+							validation_set = train,
+							test_set = train,
+							visualisation_set = visualisation,
 							criterion = NN_config.crit,
 							lr = NN_config.lr,
 							optims = NN_config.optimizer,
@@ -36,7 +39,10 @@ if __name__ == "__main__":
 	experiment.model.print_architecture((1,743))
 	experiment.fit()
 	experiment.predict()
-	experiment.visualise(data_config.audio_file, video.video2framerate(data_config.video_path))
-	#experiment.save(f"{data_config.save_path}experiment")
-	#experiment = Experiment.load(f"{data_config.save_path}experiment")
-	#experiment.visualise()
+	experiment.visualise(data_config.train_audio, video.video2framerate(data_config.train_video))
+	experiment.save(f"{data_config.save_path}experiment")
+
+	#experiment = Experiment.load(f"./results/tmp/dummy_experiment/experiment")
+	#experiment.model.load_model(f"./results/tmp/dummy_experiment/epoch1000_1")
+	#experiment.visualisation_set = visualisation
+	#experiment.visualise(data_config.train_audio, video.video2framerate(data_config.train_video))

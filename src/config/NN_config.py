@@ -13,13 +13,13 @@ import src.model.neural_network_architectures.s2c as s2c
 
 import torch
 
-input_size = 743
+input_size = 920
 output_channels = 3
 output_shape = 128
-NN_model = s2c.S2CModel(input_size,output_channels,save_path=data_config.save_path)
+NN_model = s2c.S2CModel(input_size,output_shape, output_channels,save_path=data_config.save_path)
 
-batch_size = 8
-num_epoch = 500
+batch_size = 32
+num_epoch = 200
 lr = 1e-4
 wd = 1e-4
 optimizer = torch.optim.AdamW

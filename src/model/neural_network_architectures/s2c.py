@@ -48,12 +48,19 @@ class ExtractFourier(nn.Module):
     def forward(self,x):    
         return x[1]
 
+    
+class PeekLayer(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self,x):    
+        return x
 
 
 class S2CModel(NeuralNetwork):
     """Class for a Sound2Clip model creation"""
 
-    def __init__(self, input_size, nb_channels=3, save_path="./results/tmp/"):
+    def __init__(self, input_size, output_shape, nb_channels=3, save_path="./results/tmp/"):
         """Initialise the S2C Model class
 
         Args:
@@ -66,31 +73,34 @@ class S2CModel(NeuralNetwork):
         # Model construction
         # To USER: Adjust your model here
 
-        linear_neurons = [512,512,256,128]
-        conv_kernels = [32,32,32,32,32,32,32]
+        linear_neurons = [2048,1024,1024,1024]
+        conv_kernels = [64,256,256,128,128,64,64]
 
         latent_dim = int(linear_neurons[-1] // conv_kernels[0])
         latent_img_shape = int(math.sqrt(latent_dim))
-        self.output_shape = math.pow(latent_img_shape,len(conv_kernels))
+        self.output_shape = output_shape
         
         if(latent_dim % latent_img_shape != 0):
             raise Warning("Error in S2C architectures: Please ensure that the neurons and kernels chosen fits together to recreate an image.")
 
-        self.architecture.add_module("extract_fourrier", ExtractFourier())
-        self.architecture.add_module('lin1', LinearDown(input_size, linear_neurons[0]))
-        self.architecture.add_module('lin2', LinearDown(linear_neurons[0], linear_neurons[1]))
-        self.architecture.add_module('lin3', LinearDown(linear_neurons[1], linear_neurons[2]))
-        self.architecture.add_module('lin4', LinearDown(linear_neurons[2], linear_neurons[3]))
 
+        # Encoder part -> Linear layers taking Fourier as input
+        self.architecture.add_module("extract_fourrier", ExtractFourier())
+        self.architecture.add_module('lin0', LinearDown(input_size, linear_neurons[0]))
+        for lin_idx in range(len(linear_neurons)-1): 
+            self.architecture.add_module(f'lin{lin_idx+1}', LinearDown(linear_neurons[lin_idx], linear_neurons[lin_idx+1] ))
+
+        # Unflatten to switch from linear to conv
+        img_shape = latent_img_shape
         self.architecture.add_module("unflatten", nn.Unflatten(1,(conv_kernels[0],latent_img_shape,latent_img_shape)))
 
-        self.architecture.add_module("up_conv1", Up(conv_kernels[0], conv_kernels[1]))
-        self.architecture.add_module("up_conv2", Up(conv_kernels[1], conv_kernels[2]))
-        self.architecture.add_module("up_conv3", Up(conv_kernels[2], conv_kernels[3]))
-        self.architecture.add_module("up_conv4", Up(conv_kernels[3], conv_kernels[4]))
-        self.architecture.add_module("up_conv5", Up(conv_kernels[4], conv_kernels[5]))
-        self.architecture.add_module("up_conv6", Up(conv_kernels[5], conv_kernels[6]))
-        self.architecture.add_module("out_conv", nn.Conv2d(conv_kernels[6], nb_channels, kernel_size=5, stride=1, padding=2, bias=False))
+        # Decoder part -> Convolution layers that increase image size to the desired output shape.
+        conv_idx = 0
+        while img_shape < self.output_shape:
+            self.architecture.add_module(f"up_con{conv_idx}", Up(conv_kernels[conv_idx], conv_kernels[conv_idx+1]))
+            conv_idx += 1
+            img_shape *= 2
+        self.architecture.add_module("out_conv", nn.Conv2d(conv_kernels[conv_idx], nb_channels, kernel_size=5, stride=1, padding=2, bias=False))
         self.architecture.add_module("out_sig", nn.Sigmoid())
 
         self.architecture.to(self.device)

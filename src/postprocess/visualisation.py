@@ -14,7 +14,7 @@ import src.preprocess.video2data as video2data
 import src.dataset.extract_video as video
 import moviepy.editor as mp
 
-def plot_cv2(cv2_image, save_path):
+def save_cv2(cv2_image, save_path):
     """Export a cv2 image into a file.
     Matplotlib is used for the export. 
 
@@ -73,7 +73,11 @@ if __name__ == "__main__":
         image_path = "./data/dummy/frames/dummy_clip/0.jpg"
         save_path = "./data/dummy/results/dummy_result.jpg"
         image = cv2.imread(image_path)
+<<<<<<< HEAD
+        save_cv2(image, save_path)
+=======
         plot_cv2(image, save_path)
+>>>>>>> main
 
     # Create a video from frames and audio
     if True:
