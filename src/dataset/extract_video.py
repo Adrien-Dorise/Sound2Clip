@@ -5,7 +5,6 @@
  Last updated: Adrien Dorise - June 2024
 """
 
-import numpy as np
 import cv2
 import os
 from audio_extract import extract_audio
@@ -80,6 +79,14 @@ def video2framecount(video_path):
     return int(framecount)
 
 
+def folder2feature(clip_folder_path, audio_folder_save, frame_folder_save):
+    clips = os.listdir(video_folder)
+    for clip in clips:
+        extension = clip.split(".")[-1]
+        filename = clip[0:-len(extension)-1]
+        video2image(f"{video_folder}{clip}",f"{frame_folder_save}{filename}/")
+        video2sound(f"{video_folder}{clip}",f"{audio_folder_save}{filename}/audio.wav")
+
 
 
 if __name__ == "__main__":
@@ -97,3 +104,10 @@ if __name__ == "__main__":
     if True:
         save_path = "./data/dummy/audio/dummy_audio.wav"
         video2sound(video_path, save_path)
+
+    # Extract all video of a folder
+    if True:
+        video_folder = "./data/raw_clip/"
+        audio_save = "./data/audio/"
+        frame_save = "./data/frames/"
+        folder2feature(video_folder, audio_save, frame_save)
