@@ -15,13 +15,13 @@ import src.config.data_config as data_config
 
 import torch
 
-input_size = 743
+input_size = 920
 output_channels = 3
 output_shape = 128
 NN_model = s2c.S2CModel(input_size,output_shape, output_channels,save_path=data_config.save_path)
 
-batch_size = 16
-num_epoch = 50
+batch_size = 64
+num_epoch = 200
 lr = 1e-4
 wd = 1e-4
 optimizer = torch.optim.AdamW
