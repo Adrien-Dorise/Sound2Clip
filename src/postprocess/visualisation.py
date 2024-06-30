@@ -60,6 +60,8 @@ def frames2video(frame_folder, wav_file, save_path, fps, shape=128):
         fps (int): Framerate of the video
         shape (int, optional): Shape of the image. Only squared images are supported right now. Defaults to 128.
     """
+    if(fps < 1):
+        raise Warning(f"ERROR in frames2video: fps parameter incorrect: fps={fps}")
     utils.create_file_path(save_path)
     tmp_path = f"{save_path[0:-4]}_tmp.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
