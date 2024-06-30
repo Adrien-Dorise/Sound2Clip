@@ -141,7 +141,7 @@ if __name__ == "__main__":
     
     # Fourier on dummy audio
     if True:
-        video_file = "data/dummy/audio/dummy_audio.wav"
+        video_file = "data/dummy/audio/dummy_clip.wav"
         data, sample_rate = wav2sound(video_file)
         data = stereo2mono(data)
         windows = sound2window(data, 500)
