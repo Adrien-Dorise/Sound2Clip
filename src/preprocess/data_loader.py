@@ -179,7 +179,7 @@ if __name__ == "__main__":
     save_path = "data/dummy/results/dummy_result.jpg"
     
     # Display feature and target on a newly created S2C dataset
-    if False:
+    if True:
         dataset = S2C_Dataset(wav_folder,frame_folder)
         feat, targ = dataset[0]
         
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
 
     # Create DataLoader
-    if False:
+    if True:
         dataset = S2C_Dataset(wav_folder,frame_folder)
         loader = create_loader(dataset,1,False)
         feat, targ = next(iter(loader))
