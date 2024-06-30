@@ -7,9 +7,7 @@
 
 if __name__ == "__main__":
     
-	from dragonflai.preprocess import data_loader
-	from dragonflai.utils.utils_model import modelType, taskType
-	from src.experiment import *
+	from src.experiment import Experiment
 	import src.preprocess.data_loader as loader
 	import src.config.data_config as data_config
 	import src.config.NN_config as NN_config
@@ -36,13 +34,11 @@ if __name__ == "__main__":
 							save_path = data_config.save_path
                          	)
 
-	experiment.model.print_architecture((1,743))
+	#experiment.model.print_architecture((1,743))
 	experiment.fit()
-	experiment.predict()
-	experiment.visualise(data_config.train_audio, video.video2framerate(data_config.train_video))
 	experiment.save(f"{data_config.save_path}experiment")
-
-	#experiment = Experiment.load(f"./results/tmp/dummy_experiment/experiment")
+	experiment.visualise(data_config.train_audio, video.video2framerate(data_config.train_video))
+	
+	#experiment = Experiment.load(f"./results/tmp/AoT/experiment")
 	#experiment.model.load_model(f"./results/tmp/dummy_experiment/epoch1000_1")
-	#experiment.visualisation_set = visualisation
-	#experiment.visualise(data_config.train_audio, video.video2framerate(data_config.train_video))
+
