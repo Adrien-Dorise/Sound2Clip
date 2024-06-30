@@ -14,33 +14,39 @@ import src.preprocess.video2data as video2data
 import src.dataset.extract_video as video
 import moviepy.editor as mp
 
-def save_cv2(cv2_image, save_path):
+def save_cv2(cv2_image, save_path, plot=False):
     """Export a cv2 image into a file.
     Matplotlib is used for the export. 
 
     Args:
         cv2_image (cv2 object): open-cv image
         save_path (string): File path of the futur saved picture
+        plot (bool): Set to True to plot a blocking window of the image.
     """
-    if(np.min(cv2_image) < 0):
-        raise Warning("ERROR in save_cv2: Image range must be strictly positive ([0,1] or [0, 255])")
-
+    
     # Transform image in numpy array
     if type(cv2_image) is not np.ndarray: 
         cv2_image = cv2_image.numpy()
     
+    # Verifies that image not in range [-1,1] or <0
+    if(np.min(cv2_image) < 0):
+        raise Warning("ERROR in save_cv2: Image range must be strictly positive ([0,1] or [0, 255])")
+
+
     # Case where image shape is (channel, size, size) -> Transform to (size, size, channel)
     if(cv2_image.shape[0] <= 4):
         cv2_image = cv2_image.transpose(1,2,0)
 
     # Case where images range in [0,1] -> Transform to [0,255]
     if np.max(cv2_image) < 2: 
-        cv2_image = cv2_image*255
+        cv2_image = np.array(cv2_image*255, dtype=np.uint8)
     
     utils.create_file_path(save_path)
     cv2.imwrite(save_path, cv2_image)
     
-
+    if plot:
+        cv2.imshow("S2C Image", cv2_image)
+        cv2.waitKey(0)
 
 
 def frames2video(frame_folder, wav_file, save_path, fps, shape=128):
@@ -54,6 +60,8 @@ def frames2video(frame_folder, wav_file, save_path, fps, shape=128):
         fps (int): Framerate of the video
         shape (int, optional): Shape of the image. Only squared images are supported right now. Defaults to 128.
     """
+    if(fps < 1):
+        raise Warning(f"ERROR in frames2video: fps parameter incorrect: fps={fps}")
     utils.create_file_path(save_path)
     tmp_path = f"{save_path[0:-4]}_tmp.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v') 

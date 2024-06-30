@@ -54,7 +54,7 @@ def frames2data(frame_folder_path):
     
 
 if __name__ == "__main__":
-    audio_file = "./data/dummy/audio/dummy_audio.wav"
+    audio_file = "./data/dummy/audio/dummy_clip.wav"
     video_path = "./data/dummy/raw_clip/dummy_clip.mp4"
     
     # Plot Fourier transform of the 10th frame's audio

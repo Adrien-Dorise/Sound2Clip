@@ -52,7 +52,7 @@ class Experiment():
     def fit(self):
         """Train the model using the data available in the train set.
         """
-        self.model._compile(self.train_set, self.test_set, self.criterion, lr=self.lr, opts=self.optims, scheduler=self.scheduler, batch_size=self.batch_size, epochs=self.n_epochs, kwargs=self.kwargs)
+        self.model._compile(self.train_set, self.validation_set, self.criterion, lr=self.lr, opts=self.optims, scheduler=self.scheduler, batch_size=self.batch_size, epochs=self.n_epochs, kwargs=self.kwargs)
         history = self.model.fit(self.train_set, valid_set=self.validation_set, criterion=self.criterion, epochs=self.n_epochs)
 
         self.model.plot_learning_curve(history.loss_train,history.loss_val, f"{self.save_path}loss_history")

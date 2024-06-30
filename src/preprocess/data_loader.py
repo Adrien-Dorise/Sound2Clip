@@ -10,6 +10,7 @@ import src.postprocess.visualisation as visu
 
 import random
 import cv2
+import os
 import numpy as np
 from torchvision import transforms
 import torch.nn.functional as F
@@ -85,7 +86,61 @@ class S2C_Dataset(Dataset):
         target = self.targets[idx]
         target = cv2.resize(target, dsize=(self.shape[0], self.shape[1]), interpolation=cv2.INTER_CUBIC)
         target = self.to_tensor(target)
-        return self.features[idx], target 
+        return self.features[idx], target
+    
+class S2C_Dataset_Folder(Dataset):
+    '''
+    Class used to store the dataset handled by pytorch.
+    It takes tabular data as input, and images as target.
+    '''
+    def __init__(self, audio_folder, frame_folder, shape=(256,256)):
+        '''
+        S2C_Dataset_Folder class constructor.
+        Note the the name of the frame and linked audio must share the same name for a same clip
+        Parameters
+        ----------
+        audio_folder:
+            folder containing the nested WAV folders. The audio can be extracted by using extract_video.py
+        frame_folder: 
+            folder containing all the nested frames folder. The frame can be extracted by using extract_video.py
+        Returns
+        ----------
+        None
+        '''
+        self.target_path = frame_folder
+        self.feature_path = audio_folder
+
+        self.targets = []
+        self.features = []
+        clips = os.listdir(frame_folder)
+        for clip in clips:
+            targ = video2data.frames2data(f"{self.target_path}{clip}/")
+            framecount = len(targ)
+            self.targets.extend(targ)
+            
+            feat = video2data.sync_audio(f"{self.feature_path}{clip}.wav", framecount)
+            self.features.extend(feat)
+
+            if len(self.features) == 0 or (self.targets) == 0:
+                raise Exception("No img file found")
+            if(len(self.features) != len(self.targets)):
+                raise Exception("Not the same number of features and targets! Must be an error in your dataset")
+        
+        self.to_tensor = transforms.Compose([
+            transforms.ToTensor(),  # convert from [0, 255] to [0.0, 0.1]
+            ])
+        self.shape = shape
+
+    def __len__(self):
+        return len(self.targets)
+
+    def __getitem__(self, idx):
+        target = self.targets[idx]
+        target = cv2.resize(target, dsize=(self.shape[0], self.shape[1]), interpolation=cv2.INTER_CUBIC)
+        target = self.to_tensor(target)
+        return self.features[idx], target
+    
+
     
 
 def create_loader(dataset, batch_size=None, shuffle=True):
@@ -119,8 +174,9 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import numpy as np
     
-    wav_folder = "./data/dummy/audio/dummy_audio.wav"
+    wav_folder = "./data/dummy/audio/dummy_clip.wav"
     frame_folder = "./data/dummy/frames/dummy_clip/"
+    save_path = "data/dummy/results/dummy_result.jpg"
     
     # Display feature and target on a newly created S2C dataset
     if True:
@@ -128,7 +184,8 @@ if __name__ == "__main__":
         feat, targ = dataset[0]
         
         sound.plot_fourier(feat[0],feat[1])
-        visu.plot_cv2(targ)
+        visu.save_cv2(targ, save_path)
+
 
     # Create DataLoader
     if True:
@@ -137,5 +194,20 @@ if __name__ == "__main__":
         feat, targ = next(iter(loader))
     
         sound.plot_fourier(feat[0][0],feat[1][0])
-        visu.plot_cv2(targ[0])    
+        visu.save_cv2(targ[0], save_path)    
     
+
+    # Display feature and target on a newly created S2C dataset_folder
+    if True:
+        wav_folder = "./data/dummy/audio/"
+        frame_folder = "./data/dummy/frames/"
+    
+        dataset = S2C_Dataset_Folder(wav_folder,frame_folder)
+        feat, targ = dataset[-3]
+        print(f"Lenght Datset: {len(dataset)}")
+        sound.plot_fourier(feat[0],feat[1])
+        visu.save_cv2(targ, save_path, True)
+        feat, targ = dataset[-2]
+        visu.save_cv2(targ, save_path, True)
+        feat, targ = dataset[-1]
+        visu.save_cv2(targ, save_path, True)

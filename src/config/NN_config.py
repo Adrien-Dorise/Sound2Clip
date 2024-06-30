@@ -5,11 +5,13 @@
  Last updated: Adrien Dorise - June 2024
 """
 
-import dragonflai.config.data_config as data_config
 import dragonflai.model.neural_network_architectures.FCNN as FCNN
 import dragonflai.model.neural_network_architectures.UNet as UNet
 import dragonflai.model.neural_network_architectures.VITransformer as VIT  
+
 import src.model.neural_network_architectures.s2c as s2c
+import src.config.data_config as data_config
+
 
 import torch
 
